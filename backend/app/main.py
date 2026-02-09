@@ -1,9 +1,10 @@
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from app.dependencies.db import get_db
 from sqlalchemy import text
+# local imports
+from app.dependencies.db import get_db
 
-from ..api.router import api_router
+from api.router import api_router
 
 app = FastAPI()
 app.include_router(api_router, prefix="/v1")
