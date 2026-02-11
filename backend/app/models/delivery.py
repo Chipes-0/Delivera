@@ -5,10 +5,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from app.core.database import Base
 
 class StatusEnum(enum.Enum):
-    pending = "PENDING"
-    assigned = "ASSIGNED"
-    delivered = "DELIVERED"
-    in_transit = "IN_TRANSIT"
+    CREATED = "CREATED"
+    ASSIGNED = "ASSIGNED"
+    DELIVERED = "DELIVERED"
+    IN_ROUTE = "IN_ROUTE"
 
 
 class Delivery(Base):

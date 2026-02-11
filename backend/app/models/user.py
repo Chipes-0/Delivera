@@ -7,9 +7,9 @@ from app.core.database import Base
 
 
 class RoleEnum(enum.Enum):
-    admin = "ADMIN"
-    user = "USER"
-    driver = "DRIVER"
+    ADMIN = "ADMIN"
+    DELIVER = "DELIVER"
+    RECEPTOR = "RECEPTOR"
 
 class User(Base):
     __tablename__ = "users"

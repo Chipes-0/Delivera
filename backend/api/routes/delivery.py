@@ -3,8 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # local imports
 from app.dependencies.db import get_db
-from app.models.delivery import Delivery, DeliveryStatus
-from app.models.user import User, UserRole
+from app.models.delivery import Delivery, StatusEnum
+from app.models.user import User, RoleEnum
 
 router = APIRouter(prefix="/deliveries", tags=["Deliveries"])
 
@@ -55,7 +55,7 @@ def update_delivery_status(delivery_id: UUID, status: str, db: Session = Depends
     delivery_obj = db.query(Delivery).filter(Delivery.id == delivery_id).first()
     if not delivery_obj:
         raise HTTPException(status_code=404, detail=f"Delivery with ID {delivery_id} not found")
-    if status not in DeliveryStatus._value2member_map_:
+    if status not in StatusEnum._value2member_map_:
         raise HTTPException(status_code=400, detail=f"Invalid status value: {status}")
     delivery_obj.status = status
     db.commit()
@@ -67,11 +67,11 @@ def assign_delivery(delivery_id: UUID, driver_id: UUID, db: Session = Depends(ge
     delivery_obj = db.query(Delivery).filter(Delivery.id == delivery_id).first()
     if not delivery_obj:
         raise HTTPException(status_code=404, detail=f"Delivery with ID {delivery_id} not found")
-    driver = db.query(User).filter(User.id == driver_id, User.role == UserRole.DRIVER.value).first()
+    driver = db.query(User).filter(User.id == driver_id, User.role == RoleEnum.DRIVER.value).first()
     if not driver:
         raise HTTPException(status_code=404, detail=f"Driver with ID {driver_id} not found")
     delivery_obj.assigned_to = driver_id
     db.commit()
-    update_delivery_status(delivery_id, DeliveryStatus.ASSIGNED.value, db)
+    update_delivery_status(delivery_id, StatusEnum.ASSIGNED.value, db)
     db.refresh(delivery_obj)
     return {"message": f"Delivery {delivery_id} assigned to driver {driver_id}", "data": delivery_obj}
