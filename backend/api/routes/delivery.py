@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 # local imports
 from app.dependencies.db import get_db
 from app.models.delivery import Delivery, StatusEnum
-from app.models.user import User, RoleEnum
+from app.models.users import User, RoleEnum
 
 router = APIRouter(prefix="/deliveries", tags=["Deliveries"])
 
