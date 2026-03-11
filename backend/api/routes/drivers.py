@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # local imports
 from app.dependencies.db import get_db
-from app.models.user import User, RoleEnum
+from app.models.users import User, RoleEnum
 from app.models.delivery import Delivery
 
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
