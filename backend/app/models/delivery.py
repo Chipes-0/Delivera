@@ -1,10 +1,18 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Numeric, Float, Text
+import enum
+from sqlalchemy import Column, String, Text, Numeric, ForeignKey, Enum, text, Time
 from sqlalchemy.dialects.postgresql import UUID
+# local imports
+from app.core.database import Base
+
+class StatusEnum(enum.Enum):
+    CREATED = "CREATED"
+    ASSIGNED = "ASSIGNED"
+    DELIVERED = "DELIVERED"
+    IN_ROUTE = "IN_ROUTE"
+
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
-
-from app.core.database import Base
 
 
 class Delivery(Base):
