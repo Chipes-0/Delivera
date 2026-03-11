@@ -10,21 +10,29 @@ class StatusEnum(enum.Enum):
     DELIVERED = "DELIVERED"
     IN_ROUTE = "IN_ROUTE"
 
+from sqlalchemy.orm import relationship
+from datetime import datetime
+import uuid
+
 
 class Delivery(Base):
     __tablename__ = "deliveries"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, server_default=text("gen_random_uuid()"))
-    status = Column(Enum(StatusEnum, name="Status"), nullable=True)
-    created_at = Column(Time(timezone=True), nullable=False, server_default=text("now()"))
-    assigned_at = Column(Time(timezone=True), nullable=True)
-    delivered_at = Column(Time(timezone=True), nullable=True)
-    assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
-    receiver_name = Column(String, nullable=True)
-    items_description = Column(Text, nullable=True)
-    quantity = Column(Numeric, nullable=True)
-    unity = Column(String, nullable=True)
-    cargo_value = Column(Numeric, nullable=True)
-    origin = Column(String, nullable=True)
-    destiny = Column(String, nullable=True)
-    distance = Column(Numeric, nullable=True)
+    id = Column(UUID(as_uuid=True), primary_key=True)
+    status = Column(String)
+    created_at = Column(DateTime)
+    assigned_at = Column(DateTime)
+    delivered_at = Column(DateTime)
+
+    assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"))
+
+    receiver_name = Column(String)
+    items_description = Column(Text)
+    quantity = Column(Float)
+    cargo_value = Column(Float)
+    unity = Column(String)
+    origin = Column(String)
+    destiny = Column(String)
+    distance = Column(Float)
+
+    evidence = relationship("Evidence", back_populates="delivery")

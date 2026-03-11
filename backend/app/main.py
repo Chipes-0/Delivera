@@ -3,6 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 # local imports
 from app.dependencies.db import get_db
+from app.core.database import Base, engine
+import app.models
 
 from api.router import api_router
 
