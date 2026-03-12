@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'trips/trips_home.dart';
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -16,10 +18,10 @@ class _LoginPageState extends State<LoginPage> {
 
   void _login() {
     if (_formKey.currentState!.validate()) {
-      print("Email: ${_emailController.text}");
-      print("Password: ${_passwordController.text}");
-
-      // Aquí iría tu llamada al backend
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const TripsHomePage()),
+      );
     }
   }
 
