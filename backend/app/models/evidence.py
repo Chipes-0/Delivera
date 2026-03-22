@@ -19,6 +19,6 @@ class Evidence(Base):
     photo = Column(Text)
     signature = Column(Text)
     mileage = Column(Float)
-    created_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     delivery = relationship("Delivery", back_populates="evidence")

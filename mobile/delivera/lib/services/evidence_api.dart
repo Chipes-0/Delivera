@@ -48,10 +48,12 @@ class EvidenceApi {
     required String deliveryId,
     String? signatureBase64,
     String? photoBase64,
+    String? title,
   }) async {
     final payload = <String, dynamic>{
       if ((signatureBase64 ?? '').isNotEmpty) 'signature': signatureBase64,
       if ((photoBase64 ?? '').isNotEmpty) 'photo': photoBase64,
+      if ((title ?? '').isNotEmpty) 'title': title,
     };
 
     final client = HttpClient();
@@ -62,6 +64,32 @@ class EvidenceApi {
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
       request.add(utf8.encode(jsonEncode(payload)));
+
+      final response = await request.close();
+      final body = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException(
+          'HTTP ${response.statusCode}: $body',
+          uri: request.uri,
+        );
+      }
+    } finally {
+      client.close(force: true);
+    }
+  }
+
+  Future<void> deleteEvidence({
+    required String deliveryId,
+    required int evidenceId,
+  }) async {
+    final client = HttpClient();
+    try {
+      final request = await client.deleteUrl(
+        baseUri.resolve('/v1/evidence/delivery/$deliveryId/evidences/$evidenceId'),
+      );
+      request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
 
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
