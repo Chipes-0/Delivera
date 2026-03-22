@@ -83,7 +83,7 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle de Evidencia'),
+        title: const Text('Detalles de Evidencia'),
         actions: [
           IconButton(
             onPressed: _deleting ? null : _delete,
@@ -154,9 +154,9 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  // Fecha de creación
+                  // Fecha de Registro
                   Text(
-                    'Fecha de creación',
+                    'Fecha de Registro',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
                       color: Colors.grey[600],
                     ),
@@ -165,21 +165,6 @@ class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
                   Text(
                     _formatDate(widget.evidence.createdAt),
                     style: Theme.of(context).textTheme.bodyLarge,
-                  ),
-                  const SizedBox(height: 16),
-                  // ID
-                  Text(
-                    'ID de Evidencia',
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    widget.evidence.id.toString(),
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontFamily: 'monospace',
-                    ),
                   ),
                   const SizedBox(height: 16),
                   // Delivery ID
