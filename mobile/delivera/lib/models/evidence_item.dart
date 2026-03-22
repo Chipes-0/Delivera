@@ -4,6 +4,7 @@ class EvidenceItem {
   final String? signatureBase64;
   final String? photoBase64;
   final String? createdAt;
+  final String? title;
 
   const EvidenceItem({
     required this.id,
@@ -11,6 +12,7 @@ class EvidenceItem {
     required this.signatureBase64,
     required this.photoBase64,
     required this.createdAt,
+    required this.title,
   });
 
   factory EvidenceItem.fromJson(Map<String, dynamic> json) {
@@ -25,6 +27,7 @@ class EvidenceItem {
       signatureBase64: json['signature']?.toString(),
       photoBase64: json['photo']?.toString(),
       createdAt: json['created_at']?.toString(),
+      title: json['title']?.toString(),
     );
   }
 

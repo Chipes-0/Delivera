@@ -36,7 +36,7 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
   }
 
   Future<void> _openAddModal() async {
-    final choice = await showModalBottomSheet<_EvidenceCaptureMode>(
+    final choice = await showModalBottomSheet<EvidenceCaptureMode>(
       context: context,
       showDragHandle: true,
       builder: (context) {
@@ -47,12 +47,12 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
               ListTile(
                 leading: const Icon(Icons.edit_outlined),
                 title: const Text('Firma'),
-                onTap: () => Navigator.pop(context, _EvidenceCaptureMode.signature),
+                onTap: () => Navigator.pop(context, EvidenceCaptureMode.signature),
               ),
               ListTile(
                 leading: const Icon(Icons.photo_camera_outlined),
                 title: const Text('Foto'),
-                onTap: () => Navigator.pop(context, _EvidenceCaptureMode.photo),
+                onTap: () => Navigator.pop(context, EvidenceCaptureMode.photo),
               ),
               const SizedBox(height: 8),
             ],
@@ -152,7 +152,10 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
                             ),
                           )
                         : const Icon(Icons.insert_drive_file_outlined),
-                    title: Text(e.typeLabel),
+                    title: Text(
+                      e.title ?? 'Sin título',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                     subtitle: Text(e.createdAt ?? '—'),
                   ),
                 );
@@ -165,7 +168,7 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
   }
 }
 
-enum _EvidenceCaptureMode {
+enum EvidenceCaptureMode {
   signature,
   photo,
 }
