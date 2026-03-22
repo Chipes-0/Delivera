@@ -36,7 +36,8 @@ def add_evidence(
         new_evidence = Evidence(
             delivery_id=delivery_id,
             signature=ev.get("signature"),
-            photo=ev.get("photo")
+            photo=ev.get("photo"),
+            title=ev.get("title")
         )
 
         db.add(new_evidence)
@@ -56,6 +57,7 @@ def add_evidence(
                 "delivery_id": str(ev.delivery_id),
                 "signature": ev.signature,
                 "photo": ev.photo,
+                "title": ev.title,
                 "created_at": ev.created_at.isoformat()
                 if ev.created_at else None
             }

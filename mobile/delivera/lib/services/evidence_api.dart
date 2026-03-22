@@ -48,10 +48,12 @@ class EvidenceApi {
     required String deliveryId,
     String? signatureBase64,
     String? photoBase64,
+    String? title,
   }) async {
     final payload = <String, dynamic>{
       if ((signatureBase64 ?? '').isNotEmpty) 'signature': signatureBase64,
       if ((photoBase64 ?? '').isNotEmpty) 'photo': photoBase64,
+      if ((title ?? '').isNotEmpty) 'title': title,
     };
 
     final client = HttpClient();

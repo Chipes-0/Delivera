@@ -122,6 +122,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
           deliveryId: widget.deliveryId,
           signatureBase64: signatureBase64,
           photoBase64: photoBase64,
+          title: title,
       );
       if (!mounted) return;
       Navigator.pop(context, true);
