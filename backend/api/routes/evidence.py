@@ -79,6 +79,7 @@ def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
             "delivery_id": str(e.delivery_id),
             "signature": e.signature,
             "photo": e.photo,
+            "title": e.title,
             "created_at": e.created_at.isoformat() if e.created_at else None
         }
         for e in evidence_list
@@ -116,6 +117,7 @@ def get_single_evidence(
             "delivery_id": str(evidence.delivery_id),
             "signature": evidence.signature,
             "photo": evidence.photo,
+            "title": evidence.title,
             "created_at": evidence.created_at.isoformat() if evidence.created_at else None
         }
     }
