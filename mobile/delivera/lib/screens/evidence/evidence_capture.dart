@@ -11,7 +11,7 @@ import 'evidence_list.dart';
 
 class EvidenceCapturePage extends StatefulWidget {
   final String deliveryId;
-  final _EvidenceCaptureMode mode;
+  final EvidenceCaptureMode mode;
 
   const EvidenceCapturePage({
     super.key,
@@ -30,6 +30,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
     penColor: const Color(0xFF1F4FA3),
     exportBackgroundColor: Colors.white,
   );
+  final TextEditingController _titleController = TextEditingController();
 
   Uint8List? _previewBytes;
   bool _posting = false;
@@ -37,6 +38,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
   @override
   void dispose() {
     _signature.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -70,7 +72,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
   }
 
   Future<void> _clear() async {
-    if (widget.mode == _EvidenceCaptureMode.signature) {
+    if (widget.mode == EvidenceCaptureMode.signature) {
       _signature.clear();
       setState(() => _previewBytes = null);
       return;
@@ -83,8 +85,10 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
 
     String? signatureBase64;
     String? photoBase64;
+    final now = DateTime.now();
+    final createdAt = now.toIso8601String();
 
-    if (widget.mode == _EvidenceCaptureMode.signature) {
+    if (widget.mode == EvidenceCaptureMode.signature) {
       final bytes = await _signature.toPngBytes();
       if (bytes == null || bytes.isEmpty) {
         if (!mounted) return;
@@ -105,13 +109,20 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
       }
       photoBase64 = base64Encode(_previewBytes!);
     }
-
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('El título es obligatorio.')),
+      );
+      return;
+    }
     setState(() => _posting = true);
     try {
       await _api.addEvidence(
-        deliveryId: widget.deliveryId,
-        signatureBase64: signatureBase64,
-        photoBase64: photoBase64,
+          deliveryId: widget.deliveryId,
+          signatureBase64: signatureBase64,
+          photoBase64: photoBase64,
+          title: title,
       );
       if (!mounted) return;
       Navigator.pop(context, true);
@@ -127,7 +138,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isSignature = widget.mode == _EvidenceCaptureMode.signature;
+    final isSignature = widget.mode == EvidenceCaptureMode.signature;
     final title = isSignature ? 'Capturar firma' : 'Capturar foto';
 
     return Scaffold(
@@ -184,6 +195,15 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(
+                labelText: 'Título',
+                hintText: 'Ej: Firma recibido / Foto paquete',
+                border: OutlineInputBorder(),
+              ),
+            ),
           const SizedBox(height: 16),
           Text(
             'Vista previa',
@@ -210,8 +230,12 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: ElevatedButton(
                   onPressed: _posting ? null : _clear,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE0E5EA),
+                    foregroundColor: Colors.black87,
+                  ),
                   child: const Text('Limpiar'),
                 ),
               ),
@@ -225,7 +249,7 @@ class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
                           width: 18,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('POST'),
+                      : const Text('Añadir evidencia'),
                 ),
               ),
             ],
