@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:signature/signature.dart';
 
+import '../../app_config.dart';
 import '../../services/evidence_api.dart';
 import 'evidence_list.dart';
 
@@ -24,7 +25,7 @@ class EvidenceCapturePage extends StatefulWidget {
 }
 
 class _EvidenceCapturePageState extends State<EvidenceCapturePage> {
-  final _api = EvidenceApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+  final _api = EvidenceApi(baseUri: AppConfig.apiBaseUri);
   final _signature = SignatureController(
     penStrokeWidth: 3,
     penColor: const Color(0xFF1F4FA3),

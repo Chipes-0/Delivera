@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../app_config.dart';
 import '../../models/evidence_item.dart';
 import '../../services/evidence_api.dart';
 
@@ -21,7 +22,7 @@ class EvidenceDetailPage extends StatefulWidget {
 }
 
 class _EvidenceDetailPageState extends State<EvidenceDetailPage> {
-  final _api = EvidenceApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+  final _api = EvidenceApi(baseUri: AppConfig.apiBaseUri);
   bool _deleting = false;
 
   Future<void> _delete() async {

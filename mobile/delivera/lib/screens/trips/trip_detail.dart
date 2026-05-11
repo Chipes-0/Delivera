@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app_config.dart';
 import '../../models/delivery_detail.dart';
 import '../../services/delivery_api.dart';
 import '../evidence/evidence_list.dart';
@@ -14,7 +15,7 @@ class TripDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final api = DeliveryApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+    final api = DeliveryApi(baseUri: AppConfig.apiBaseUri);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Viaje')),

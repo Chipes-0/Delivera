@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 # local imports
+from .routes.auth import router as auth_router
 from .routes.health import router as health_router
 from .routes.drivers import router as drivers_router
 from .routes.delivery import router as deliveries_router
@@ -9,6 +10,7 @@ from .routes.evidence import router as evidence_router
 
 api_router = APIRouter()
 
+api_router.include_router(auth_router)
 api_router.include_router(health_router)
 api_router.include_router(drivers_router)
 api_router.include_router(deliveries_router)

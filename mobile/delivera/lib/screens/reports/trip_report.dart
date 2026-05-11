@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../app_config.dart';
+
 import '../../models/delivery_detail.dart';
 import '../../models/evidence_item.dart';
 import '../../services/delivery_api.dart';
@@ -25,8 +27,8 @@ class TripReportPage extends StatefulWidget {
 }
 
 class _TripReportPageState extends State<TripReportPage> {
-  final _deliveryApi = DeliveryApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
-  final _evidenceApi = EvidenceApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+  final _deliveryApi = DeliveryApi(baseUri: AppConfig.apiBaseUri);
+  final _evidenceApi = EvidenceApi(baseUri: AppConfig.apiBaseUri);
 
   late Future<_ReportData> _future;
   bool _exporting = false;

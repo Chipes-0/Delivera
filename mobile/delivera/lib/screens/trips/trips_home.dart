@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../app_config.dart';
 import '../../models/delivery_summary.dart';
 import '../../services/deliveries_api.dart';
+import '../../session.dart';
+import '../login.dart';
 import '../reports/completed_trips.dart';
 import 'trip_detail.dart';
 
@@ -13,10 +16,7 @@ class TripsHomePage extends StatefulWidget {
 }
 
 class _TripsHomePageState extends State<TripsHomePage> {
-  // Ajusta el host/puerto según donde corre tu backend.
-  // Si pruebas en Android emulator: http://10.0.2.2:8000
-  // Si pruebas en iOS simulator: http://localhost:8000
-  final _api = DeliveriesApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+  final _api = DeliveriesApi(baseUri: AppConfig.apiBaseUri);
 
   late Future<List<DeliverySummary>> _future;
 
@@ -68,6 +68,20 @@ class _TripsHomePageState extends State<TripsHomePage> {
                     MaterialPageRoute(
                       builder: (_) => const CompletedTripsPage(),
                     ),
+                  );
+                },
+              ),
+              const Divider(height: 1),
+              ListTile(
+                leading: const Icon(Icons.logout),
+                title: const Text('Cerrar sesión'),
+                onTap: () async {
+                  Navigator.pop(context);
+                  await Session.clear();
+                  if (!context.mounted) return;
+                  Navigator.of(context, rootNavigator: true).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginPage()),
+                    (_) => false,
                   );
                 },
               ),

@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
+
+from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
-from app.models import Evidence, Delivery
+from app.models import Evidence, Delivery, User
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
 
@@ -11,7 +13,8 @@ router = APIRouter(prefix="/evidence", tags=["Evidence"])
 def add_evidence(
     delivery_id: UUID,
     evidence: dict,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     delivery = db.query(Delivery).filter(
@@ -67,7 +70,11 @@ def add_evidence(
 
 
 @router.get("/delivery/{delivery_id}/evidence")
-def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
+def get_delivery_evidence(
+    delivery_id: UUID,
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
+):
 
     evidence_list = db.query(Evidence).filter(
         Evidence.delivery_id == delivery_id
@@ -96,7 +103,8 @@ def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
 def get_single_evidence(
     delivery_id: UUID,
     evidence_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     evidence = db.query(Evidence).filter(
@@ -126,7 +134,8 @@ def get_single_evidence(
 def delete_evidence(
     delivery_id: UUID,
     evidence_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _current_user: User = Depends(get_current_user),
 ):
 
     evidence = db.query(Evidence).filter(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../app_config.dart';
 import '../../models/delivery_summary.dart';
 import '../../services/deliveries_api.dart';
 import 'trip_report.dart';
@@ -9,7 +10,7 @@ class CompletedTripsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final api = DeliveriesApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+    final api = DeliveriesApi(baseUri: AppConfig.apiBaseUri);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Reportes')),

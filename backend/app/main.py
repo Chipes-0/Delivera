@@ -1,3 +1,10 @@
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+_backend_dir = Path(__file__).resolve().parent.parent
+load_dotenv(_backend_dir / ".env")
+
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text

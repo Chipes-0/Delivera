@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies.db import get_db
+from app.core.security import hash_password
 from app.models import User
 from uuid import UUID
 
@@ -30,10 +31,12 @@ def get_users(db: Session = Depends(get_db)):
 
 @router.post("/")
 def create_user(user: dict, db: Session = Depends(get_db)):
+    raw_password = user.get("password")
+    stored_password = hash_password(raw_password) if raw_password else None
 
     new_user = User(
         name=user.get("name"),
-        password=user.get("password"),
+        password=stored_password,
         role=user.get("role")
     )
 

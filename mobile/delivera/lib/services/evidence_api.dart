@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../models/evidence_item.dart';
+import 'auth_header.dart';
 
 class EvidenceApi {
   final Uri baseUri;
@@ -17,6 +18,7 @@ class EvidenceApi {
         baseUri.resolve('/v1/evidence/delivery/$deliveryId/evidence'),
       );
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      applyBearer(request);
 
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
@@ -63,6 +65,7 @@ class EvidenceApi {
       );
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      applyBearer(request);
       request.add(utf8.encode(jsonEncode(payload)));
 
       final response = await request.close();
@@ -90,6 +93,7 @@ class EvidenceApi {
       );
       request.headers.set(HttpHeaders.contentTypeHeader, 'application/json');
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      applyBearer(request);
 
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();

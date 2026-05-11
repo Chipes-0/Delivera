@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../../app_config.dart';
 import '../../models/evidence_item.dart';
 import '../../services/evidence_api.dart';
 import 'evidence_capture.dart';
@@ -20,7 +21,7 @@ class EvidenceListPage extends StatefulWidget {
 }
 
 class _EvidenceListPageState extends State<EvidenceListPage> {
-  final _api = EvidenceApi(baseUri: Uri.parse('http://10.0.2.2:8000'));
+  final _api = EvidenceApi(baseUri: AppConfig.apiBaseUri);
   late Future<List<EvidenceItem>> _future;
 
   @override

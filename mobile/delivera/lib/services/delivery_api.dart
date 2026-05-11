@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import '../models/delivery_detail.dart';
+import 'auth_header.dart';
 
 class DeliveryApi {
   final Uri baseUri;
@@ -17,6 +18,7 @@ class DeliveryApi {
         baseUri.resolve('/v1/deliveries/$deliveryId'),
       );
       request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      applyBearer(request);
 
       final response = await request.close();
       final body = await response.transform(utf8.decoder).join();
