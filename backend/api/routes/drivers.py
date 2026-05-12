@@ -2,6 +2,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # local imports
+from app.dependencies.auth import get_current_user, require_admin
 from app.dependencies.db import get_db
 from app.models.users import User, RoleEnum
 from app.models.delivery import Delivery
@@ -9,8 +10,11 @@ from app.models.delivery import Delivery
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def get_drivers(db: Session = Depends(get_db)):
-    drivers = db.query(User).filter(User.role == RoleEnum.DRIVER.value).all()
+def get_drivers(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    drivers = db.query(User).filter(User.role == RoleEnum.DELIVER).all()
     return {"message": "List of drivers", "data": drivers}
 
 @router.get("/{driver_id}", status_code=status.HTTP_200_OK)

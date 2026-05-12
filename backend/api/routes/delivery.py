@@ -1,11 +1,25 @@
+import uuid
+from datetime import datetime, timezone
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-# local imports
-from app.dependencies.auth import get_current_user
+
+from app.dependencies.auth import get_current_user, require_admin
 from app.dependencies.db import get_db
 from app.models.delivery import Delivery, StatusEnum
 from app.models.users import User, RoleEnum
+
+_CREATE_FIELDS = frozenset({
+    "receiver_name",
+    "items_description",
+    "quantity",
+    "cargo_value",
+    "unity",
+    "origin",
+    "destiny",
+    "distance",
+})
 
 router = APIRouter(prefix="/deliveries", tags=["Deliveries"])
 
@@ -41,13 +55,55 @@ def get_delivery(
         raise HTTPException(status_code=404, detail=f"Delivery with ID {delivery_id} not found")
     return {"message": f"Details of delivery {delivery_id}", "data": delivery}
 
+def _get_deliver_user(db: Session, user_id: UUID) -> User | None:
+    return (
+        db.query(User)
+        .filter(User.id == user_id, User.role == RoleEnum.DELIVER)
+        .first()
+    )
+
+
 @router.post("/", status_code=status.HTTP_201_CREATED)
 def create_delivery(
     delivery: dict,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _admin: User = Depends(require_admin),
 ):
-    new_delivery = Delivery(**delivery)
+    now = datetime.now(timezone.utc)
+    payload = {k: delivery[k] for k in _CREATE_FIELDS if k in delivery}
+
+    assigned_to: UUID | None = None
+    if delivery.get("assigned_to") is not None:
+        try:
+            assigned_to = UUID(str(delivery["assigned_to"]))
+        except (ValueError, TypeError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="assigned_to debe ser un UUID válido",
+            ) from exc
+        driver = _get_deliver_user(db, assigned_to)
+        if not driver:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="assigned_to debe ser el id de un usuario con rol DELIVER",
+            )
+
+    if assigned_to:
+        status_value = StatusEnum.ASSIGNED.value
+        assigned_at = now
+    else:
+        status_value = StatusEnum.CREATED.value
+        assigned_at = None
+
+    new_delivery = Delivery(
+        id=uuid.uuid4(),
+        status=status_value,
+        created_at=now,
+        assigned_at=assigned_at,
+        delivered_at=None,
+        assigned_to=assigned_to,
+        **payload,
+    )
     db.add(new_delivery)
     db.commit()
     db.refresh(new_delivery)
@@ -102,16 +158,20 @@ def assign_delivery(
     delivery_id: UUID,
     driver_id: UUID,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _admin: User = Depends(require_admin),
 ):
     delivery_obj = db.query(Delivery).filter(Delivery.id == delivery_id).first()
     if not delivery_obj:
         raise HTTPException(status_code=404, detail=f"Delivery with ID {delivery_id} not found")
-    driver = db.query(User).filter(User.id == driver_id, User.role == RoleEnum.DRIVER.value).first()
+    driver = _get_deliver_user(db, driver_id)
     if not driver:
-        raise HTTPException(status_code=404, detail=f"Driver with ID {driver_id} not found")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El usuario indicado no existe o no tiene rol DELIVER",
+        )
     delivery_obj.assigned_to = driver_id
+    delivery_obj.assigned_at = datetime.now(timezone.utc)
+    delivery_obj.status = StatusEnum.ASSIGNED.value
     db.commit()
-    _apply_delivery_status(db, delivery_id, StatusEnum.ASSIGNED.value)
     db.refresh(delivery_obj)
     return {"message": f"Delivery {delivery_id} assigned to driver {driver_id}", "data": delivery_obj}
