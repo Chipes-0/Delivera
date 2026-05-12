@@ -18,4 +18,4 @@ class User(Base):
     name = Column(String, nullable=True)
     password = Column(String, nullable=True)
     role = Column(Enum(RoleEnum, name="Role"), nullable=True)
-    created_at = Column(Time(timezone=True), nullable=True)
+    created_at = Column(Time(timezone=False), nullable=True)

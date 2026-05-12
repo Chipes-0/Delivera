@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.dependencies.db import get_db
@@ -33,11 +35,12 @@ def get_users(db: Session = Depends(get_db)):
 def create_user(user: dict, db: Session = Depends(get_db)):
     raw_password = user.get("password")
     stored_password = hash_password(raw_password) if raw_password else None
-
+    created_at = datetime.utcnow()
     new_user = User(
         name=user.get("name"),
         password=stored_password,
-        role=user.get("role")
+        role=user.get("role"),
+        created_at=created_at
     )
 
     db.add(new_user)
