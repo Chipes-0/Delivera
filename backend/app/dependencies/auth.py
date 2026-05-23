@@ -51,3 +51,12 @@ def require_admin(current: User = Depends(get_current_user)) -> User:
             detail="Solo un administrador puede realizar esta acción.",
         )
     return current
+
+
+def require_deliver(current: User = Depends(get_current_user)) -> User:
+    if current.role is not RoleEnum.DELIVER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo un repartidor puede realizar esta acción.",
+        )
+    return current

@@ -4,8 +4,10 @@ import '../../app_config.dart';
 import '../../models/delivery_summary.dart';
 import '../../services/deliveries_api.dart';
 import '../../session.dart';
+import '../../widgets/trip_summary_tile.dart';
 import '../login.dart';
 import '../reports/completed_trips.dart';
+import 'create_trip.dart';
 import 'trip_detail.dart';
 
 class TripsHomePage extends StatefulWidget {
@@ -39,6 +41,25 @@ class _TripsHomePageState extends State<TripsHomePage> {
       appBar: AppBar(
         title: const Text('Viajes'),
       ),
+      floatingActionButton: Session.isAdmin
+          ? FloatingActionButton.extended(
+              onPressed: () async {
+                final created = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateTripPage()),
+                );
+                if (created == true && mounted) {
+                  await _refresh();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Viaje creado y asignado')),
+                  );
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Nuevo viaje'),
+            )
+          : null,
       drawer: Drawer(
         child: SafeArea(
           child: ListView(
@@ -58,19 +79,20 @@ class _TripsHomePageState extends State<TripsHomePage> {
                   Navigator.pop(context);
                 },
               ),
-              ListTile(
-                leading: const Icon(Icons.bar_chart_outlined),
-                title: const Text('Reportes'),
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const CompletedTripsPage(),
-                    ),
-                  );
-                },
-              ),
+              if (Session.isAdmin)
+                ListTile(
+                  leading: const Icon(Icons.bar_chart_outlined),
+                  title: const Text('Reportes'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const CompletedTripsPage(),
+                      ),
+                    );
+                  },
+                ),
               const Divider(height: 1),
               ListTile(
                 leading: const Icon(Icons.logout),
@@ -122,7 +144,9 @@ class _TripsHomePageState extends State<TripsHomePage> {
                 padding: const EdgeInsets.all(16),
                 children: [
                   Text(
-                    'No hay viajes para mostrar.',
+                    Session.isDriver
+                        ? 'No tienes viajes asignados.'
+                        : 'No hay viajes para mostrar.',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -137,24 +161,16 @@ class _TripsHomePageState extends State<TripsHomePage> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final trip = trips[index];
-                final status = trip.status.isEmpty ? '—' : trip.status;
-                return Card(
-                  elevation: 1,
-                  clipBehavior: Clip.antiAlias,
-                  child: ListTile(
-                    leading: const Icon(Icons.route_outlined),
-                    title: Text('Viaje ${trip.id}'),
-                    subtitle: Text('Status: $status'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => TripDetailPage(deliveryId: trip.id),
-                        ),
-                      );
-                    },
-                  ),
+                return TripSummaryTile(
+                  trip: trip,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => TripDetailPage(deliveryId: trip.id),
+                      ),
+                    );
+                  },
                 );
               },
             );

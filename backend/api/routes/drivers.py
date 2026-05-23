@@ -6,6 +6,7 @@ from app.dependencies.auth import get_current_user, require_admin
 from app.dependencies.db import get_db
 from app.models.users import User, RoleEnum
 from app.models.delivery import Delivery
+from app.serializers.delivery import delivery_to_dict
 
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
@@ -30,4 +31,7 @@ def get_driver_deliveries(driver_id: UUID, db: Session = Depends(get_db)):
     if not driver:
         raise HTTPException(status_code=404, detail=f"Driver with ID {driver_id} not found")
     deliveries = db.query(Delivery).filter(Delivery.assigned_to == driver_id).all()
-    return {"message": f"Deliveries assigned to driver {driver_id}", "data": deliveries}
+    return {
+        "message": f"Deliveries assigned to driver {driver_id}",
+        "data": [delivery_to_dict(d) for d in deliveries],
+    }

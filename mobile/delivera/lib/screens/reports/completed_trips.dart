@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../app_config.dart';
 import '../../models/delivery_summary.dart';
 import '../../services/deliveries_api.dart';
+import '../../widgets/trip_summary_tile.dart';
 import 'trip_report.dart';
 
 class CompletedTripsPage extends StatelessWidget {
@@ -45,21 +46,16 @@ class CompletedTripsPage extends StatelessWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final trip = done[index];
-              return Card(
-                child: ListTile(
-                  leading: const Icon(Icons.check_circle_outline),
-                  title: Text('Viaje ${trip.id}'),
-                  subtitle: Text('Status: ${trip.status}'),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => TripReportPage(deliveryId: trip.id),
-                      ),
-                    );
-                  },
-                ),
+              return TripSummaryTile(
+                trip: trip,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => TripReportPage(deliveryId: trip.id),
+                    ),
+                  );
+                },
               );
             },
           );

@@ -6,7 +6,16 @@ class Session {
 
   static String? _accessToken;
 
+  static Map<String, dynamic>? _decodedToken;
+
   static String? get accessToken => _accessToken;
+
+  static String? get role =>
+      _decodedToken?['role']?.toString().toUpperCase();
+
+  static bool get isAdmin => role == 'ADMIN';
+
+  static bool get isDriver => role == 'DELIVER';
 
   static Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
@@ -25,15 +34,16 @@ class Session {
       await prefs.remove(_tokenKey);
       _accessToken = null;
 
-      print('TOKEN EXPIRADO');
       return;
     }
 
     _accessToken = token;
+    _decodedToken = JwtDecoder.decode(token);
   }
 
   static Future<void> saveToken(String token) async {
     _accessToken = token;
+    _decodedToken = JwtDecoder.decode(token);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
@@ -41,6 +51,7 @@ class Session {
 
   static Future<void> clear() async {
     _accessToken = null;
+    _decodedToken = null;
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);

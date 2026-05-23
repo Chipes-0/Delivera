@@ -5,10 +5,13 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.dependencies.auth import get_current_user, require_admin
+from app.dependencies.auth import get_current_user, require_admin, require_deliver
 from app.dependencies.db import get_db
+from app.dependencies.delivery_access import deliveries_query_for_user, get_delivery_for_user
 from app.models.delivery import Delivery, StatusEnum
+from app.models.evidence import Evidence
 from app.models.users import User, RoleEnum
+from app.serializers.delivery import delivery_to_dict
 
 _CREATE_FIELDS = frozenset({
     "receiver_name",
@@ -39,21 +42,25 @@ def _apply_delivery_status(db: Session, delivery_id: UUID, new_status: str) -> D
 @router.get("/", status_code=status.HTTP_200_OK)
 def get_deliveries(
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    deliveries = db.query(Delivery).all()
-    return {"message": "List of deliveries", "data": deliveries}
+    deliveries = deliveries_query_for_user(db, current_user).all()
+    return {
+        "message": "List of deliveries",
+        "data": [delivery_to_dict(d) for d in deliveries],
+    }
 
 @router.get("/{delivery_id}", status_code=status.HTTP_200_OK)
 def get_delivery(
     delivery_id: UUID,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
-    delivery = db.query(Delivery).filter(Delivery.id == delivery_id).first()
-    if not delivery:
-        raise HTTPException(status_code=404, detail=f"Delivery with ID {delivery_id} not found")
-    return {"message": f"Details of delivery {delivery_id}", "data": delivery}
+    delivery = get_delivery_for_user(db, delivery_id, current_user)
+    return {
+        "message": f"Details of delivery {delivery_id}",
+        "data": delivery_to_dict(delivery),
+    }
 
 def _get_deliver_user(db: Session, user_id: UUID) -> User | None:
     return (
@@ -107,14 +114,14 @@ def create_delivery(
     db.add(new_delivery)
     db.commit()
     db.refresh(new_delivery)
-    return {"message": "Delivery created", "data": new_delivery}
+    return {"message": "Delivery created", "data": delivery_to_dict(new_delivery)}
 
 @router.put("/{delivery_id}", status_code=status.HTTP_200_OK)
 def update_delivery(
     delivery_id: UUID,
     delivery: dict,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _admin: User = Depends(require_admin),
 ):
     delivery_obj = db.query(Delivery).filter(Delivery.id == delivery_id).first()
     if not delivery_obj:
@@ -125,7 +132,10 @@ def update_delivery(
         setattr(delivery_obj, key, value)
     db.commit()
     db.refresh(delivery_obj)
-    return {"message": f"Delivery {delivery_id} updated", "data": delivery_obj}
+    return {
+        "message": f"Delivery {delivery_id} updated",
+        "data": delivery_to_dict(delivery_obj),
+    }
 
 @router.delete("/{delivery_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_delivery(
@@ -145,12 +155,46 @@ def update_delivery_status(
     delivery_id: UUID,
     status: str,
     db: Session = Depends(get_db),
-    _current_user: User = Depends(get_current_user),
+    _admin: User = Depends(require_admin),
 ):
     delivery_obj = _apply_delivery_status(db, delivery_id, status)
     return {
         "message": f"Delivery {delivery_id} status updated to {status}",
-        "data": delivery_obj,
+        "data": delivery_to_dict(delivery_obj),
+    }
+
+
+@router.put("/{delivery_id}/complete", status_code=status.HTTP_200_OK)
+def complete_delivery(
+    delivery_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_deliver),
+):
+    delivery_obj = get_delivery_for_user(db, delivery_id, current_user)
+
+    if delivery_obj.status == StatusEnum.DELIVERED.value:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Este viaje ya está marcado como completado.",
+        )
+
+    evidence_count = (
+        db.query(Evidence).filter(Evidence.delivery_id == delivery_id).count()
+    )
+    if evidence_count < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Debes registrar al menos una evidencia antes de completar el viaje.",
+        )
+
+    now = datetime.now(timezone.utc)
+    delivery_obj.status = StatusEnum.DELIVERED.value
+    delivery_obj.delivered_at = now
+    db.commit()
+    db.refresh(delivery_obj)
+    return {
+        "message": f"Delivery {delivery_id} marked as completed",
+        "data": delivery_to_dict(delivery_obj),
     }
 
 @router.get("/{delivery_id}/assign", status_code=status.HTTP_200_OK)
@@ -174,4 +218,7 @@ def assign_delivery(
     delivery_obj.status = StatusEnum.ASSIGNED.value
     db.commit()
     db.refresh(delivery_obj)
-    return {"message": f"Delivery {delivery_id} assigned to driver {driver_id}", "data": delivery_obj}
+    return {
+        "message": f"Delivery {delivery_id} assigned to driver {driver_id}",
+        "data": delivery_to_dict(delivery_obj),
+    }

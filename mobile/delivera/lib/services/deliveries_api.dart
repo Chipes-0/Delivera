@@ -43,5 +43,35 @@ class DeliveriesApi {
       client.close(force: true);
     }
   }
+
+  Future<String> createDelivery(Map<String, dynamic> body) async {
+    final client = HttpClient();
+    try {
+      final request = await client.postUrl(baseUri.resolve('/v1/deliveries/'));
+      request.headers.contentType = ContentType.json;
+      request.headers.set(HttpHeaders.acceptHeader, 'application/json');
+      applyBearer(request);
+      request.add(utf8.encode(jsonEncode(body)));
+
+      final response = await request.close();
+      final responseBody = await response.transform(utf8.decoder).join();
+
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        throw HttpException(
+          'HTTP ${response.statusCode}: $responseBody',
+          uri: request.uri,
+        );
+      }
+
+      final decoded = jsonDecode(responseBody);
+      final data = (decoded is Map<String, dynamic>) ? decoded['data'] : null;
+      if (data is Map<String, dynamic>) {
+        return data['id']?.toString() ?? '';
+      }
+      throw const FormatException('Respuesta inesperada al crear el viaje');
+    } finally {
+      client.close(force: true);
+    }
+  }
 }
 
