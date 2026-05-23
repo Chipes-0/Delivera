@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 
 import '../../app_config.dart';
 import '../../models/evidence_item.dart';
 import '../../services/evidence_api.dart';
+import '../../widgets/evidence_preview_card.dart';
 import 'evidence_capture.dart';
 import 'evidence_detail.dart';
 
@@ -137,10 +136,8 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
                 final e = items[index];
-                final previewBytes = (e.photoBase64 ?? e.signatureBase64);
-                final hasPreview = (previewBytes ?? '').isNotEmpty;
-
-                return GestureDetector(
+                return EvidencePreviewCard(
+                  evidence: e,
                   onTap: () async {
                     final deleted = await Navigator.push<bool>(
                       context,
@@ -155,83 +152,6 @@ class _EvidenceListPageState extends State<EvidenceListPage> {
                       await _refresh();
                     }
                   },
-                  child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            if (hasPreview)
-                              ClipRRect(
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(12),
-                                  topRight: Radius.circular(12),
-                                ),
-                                child: Image.memory(
-                                  base64Decode(previewBytes!),
-                                  width: double.infinity,
-                                  height: 200,
-                                  fit: BoxFit.cover,
-                                ),
-                              )
-                            else
-                              Container(
-                                width: double.infinity,
-                                height: 120,
-                                color: const Color(0xFFF0F0F0),
-                                child: const Center(
-                                  child: Icon(Icons.insert_drive_file_outlined),
-                                ),
-                              ),
-                            Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    e.title ?? 'Sin título',
-                                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    e.createdAt ?? '—',
-                                    style: Theme.of(context).textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        // Badge tipo de evidencia
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: (e.signatureBase64 ?? '').isNotEmpty
-                                  ? const Color(0xFF1F4FA3)
-                                  : const Color(0xFF4CAF50),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Text(
-                              e.typeLabel,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 );
               },
             );

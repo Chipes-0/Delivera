@@ -1,18 +1,17 @@
-import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
-import 'package:excel/excel.dart' hide Border;
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../app_config.dart';
-
 import '../../models/delivery_detail.dart';
 import '../../models/evidence_item.dart';
 import '../../services/delivery_api.dart';
 import '../../services/evidence_api.dart';
+import '../../widgets/evidence_preview_card.dart';
+import '../evidence/evidence_detail.dart';
 
 class TripReportPage extends StatefulWidget {
   final String deliveryId;
@@ -117,40 +116,42 @@ class _TripReportPageState extends State<TripReportPage> {
           final data = snapshot.data;
           if (data == null) return const Center(child: Text('Sin datos.'));
 
-          final signatures = data.evidence.where((e) => (e.signatureBase64 ?? '').isNotEmpty).toList();
-          final photos = data.evidence.where((e) => (e.photoBase64 ?? '').isNotEmpty).toList();
+          final signatures = data.evidence
+              .where((e) => (e.signatureBase64 ?? '').isNotEmpty)
+              .toList();
+          final photos = data.evidence
+              .where((e) => (e.photoBase64 ?? '').isNotEmpty)
+              .toList();
 
-          Widget grid(List<EvidenceItem> items) {
-            if (items.isEmpty) return const Text('—');
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-              ),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final e = items[index];
-                final b64 = e.photoBase64 ?? e.signatureBase64 ?? '';
-                Uint8List? bytes;
-                try {
-                  bytes = base64Decode(b64);
-                } catch (_) {}
-                return Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFFD1D6DB)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: bytes == null
-                      ? const Center(child: Text('Sin preview'))
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.memory(bytes, fit: BoxFit.cover),
+          Widget evidenceSection(List<EvidenceItem> items) {
+            if (items.isEmpty) {
+              return Text(
+                '—',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+              );
+            }
+            return Column(
+              children: [
+                for (var i = 0; i < items.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 12),
+                  EvidencePreviewCard(
+                    evidence: items[i],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => EvidenceDetailPage(
+                            evidence: items[i],
+                            deliveryId: widget.deliveryId,
+                          ),
                         ),
-                );
-              },
+                      );
+                    },
+                  ),
+                ],
+              ],
             );
           }
 
@@ -182,11 +183,11 @@ class _TripReportPageState extends State<TripReportPage> {
               const SizedBox(height: 16),
               Text('Firmas', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              grid(signatures),
+              evidenceSection(signatures),
               const SizedBox(height: 16),
               Text('Fotos', style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 8),
-              grid(photos),
+              evidenceSection(photos),
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
