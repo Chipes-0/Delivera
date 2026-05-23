@@ -17,13 +17,23 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
   bool _loading = false;
+  String? _loginError;
 
   final _authApi = AuthApi(baseUri: AppConfig.apiBaseUri);
+
+  void _clearLoginError() {
+    if (_loginError != null) {
+      setState(() => _loginError = null);
+    }
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _loginError = null;
+    });
     try {
       await _authApi.login(
         name: _nameController.text.trim(),
@@ -34,10 +44,10 @@ class _LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(builder: (_) => const TripsHomePage()),
       );
-    } catch (e) {
+    } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No se pudo iniciar sesión: $e')),
+      setState(
+        () => _loginError = 'Usuario o contraseña incorrectos',
       );
     } finally {
       if (mounted) setState(() => _loading = false);
@@ -53,6 +63,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final errorColor = Theme.of(context).colorScheme.error;
+
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -84,10 +96,25 @@ class _LoginPageState extends State<LoginPage> {
                 controller: _nameController,
                 textInputAction: TextInputAction.next,
                 autocorrect: false,
+                onChanged: (_) => _clearLoginError(),
                 decoration: InputDecoration(
                   labelText: 'Usuario',
                   labelStyle: Theme.of(context).textTheme.bodyMedium,
                   border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _loginError != null
+                          ? errorColor
+                          : const Color(0xFFE0E0E0),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _loginError != null
+                          ? errorColor
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
@@ -100,11 +127,26 @@ class _LoginPageState extends State<LoginPage> {
               TextFormField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
+                onChanged: (_) => _clearLoginError(),
                 onFieldSubmitted: (_) => _login(),
                 decoration: InputDecoration(
                   labelText: 'Contraseña',
                   labelStyle: Theme.of(context).textTheme.bodyMedium,
                   border: const OutlineInputBorder(),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _loginError != null
+                          ? errorColor
+                          : const Color(0xFFE0E0E0),
+                    ),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: _loginError != null
+                          ? errorColor
+                          : Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscurePassword
@@ -126,6 +168,17 @@ class _LoginPageState extends State<LoginPage> {
                   return null;
                 },
               ),
+              if (_loginError != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _loginError!,
+                  style: TextStyle(
+                    color: errorColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               SizedBox(
                 width: double.infinity,
