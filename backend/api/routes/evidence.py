@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from uuid import UUID
+
+from app.dependencies.auth import get_current_user
 from app.dependencies.db import get_db
-from app.models import Evidence, Delivery
+from app.dependencies.delivery_access import get_delivery_for_user
+from app.models import Evidence, User
 
 router = APIRouter(prefix="/evidence", tags=["Evidence"])
 
@@ -11,18 +14,10 @@ router = APIRouter(prefix="/evidence", tags=["Evidence"])
 def add_evidence(
     delivery_id: UUID,
     evidence: dict,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
-
-    delivery = db.query(Delivery).filter(
-        Delivery.id == delivery_id
-    ).first()
-
-    if not delivery:
-        return {
-            "success": False,
-            "message": "Delivery not found"
-        }
+    get_delivery_for_user(db, delivery_id, current_user)
 
     created_evidences = []
 
@@ -36,7 +31,8 @@ def add_evidence(
         new_evidence = Evidence(
             delivery_id=delivery_id,
             signature=ev.get("signature"),
-            photo=ev.get("photo")
+            photo=ev.get("photo"),
+            title=ev.get("title")
         )
 
         db.add(new_evidence)
@@ -56,6 +52,7 @@ def add_evidence(
                 "delivery_id": str(ev.delivery_id),
                 "signature": ev.signature,
                 "photo": ev.photo,
+                "title": ev.title,
                 "created_at": ev.created_at.isoformat()
                 if ev.created_at else None
             }
@@ -65,7 +62,12 @@ def add_evidence(
 
 
 @router.get("/delivery/{delivery_id}/evidence")
-def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
+def get_delivery_evidence(
+    delivery_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    get_delivery_for_user(db, delivery_id, current_user)
 
     evidence_list = db.query(Evidence).filter(
         Evidence.delivery_id == delivery_id
@@ -77,6 +79,7 @@ def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
             "delivery_id": str(e.delivery_id),
             "signature": e.signature,
             "photo": e.photo,
+            "title": e.title,
             "created_at": e.created_at.isoformat() if e.created_at else None
         }
         for e in evidence_list
@@ -93,8 +96,10 @@ def get_delivery_evidence(delivery_id: UUID, db: Session = Depends(get_db)):
 def get_single_evidence(
     delivery_id: UUID,
     evidence_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    get_delivery_for_user(db, delivery_id, current_user)
 
     evidence = db.query(Evidence).filter(
         Evidence.id == evidence_id,
@@ -114,6 +119,7 @@ def get_single_evidence(
             "delivery_id": str(evidence.delivery_id),
             "signature": evidence.signature,
             "photo": evidence.photo,
+            "title": evidence.title,
             "created_at": evidence.created_at.isoformat() if evidence.created_at else None
         }
     }
@@ -122,8 +128,10 @@ def get_single_evidence(
 def delete_evidence(
     delivery_id: UUID,
     evidence_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
+    get_delivery_for_user(db, delivery_id, current_user)
 
     evidence = db.query(Evidence).filter(
         Evidence.id == evidence_id,

@@ -20,9 +20,9 @@ class Delivery(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True)
     status = Column(String)
-    created_at = Column(DateTime)
-    assigned_at = Column(DateTime)
-    delivered_at = Column(DateTime)
+    created_at = Column(DateTime(timezone=True))
+    assigned_at = Column(DateTime(timezone=True))
+    delivered_at = Column(DateTime(timezone=True))
 
     assigned_to = Column(UUID(as_uuid=True), ForeignKey("users.id"))
 

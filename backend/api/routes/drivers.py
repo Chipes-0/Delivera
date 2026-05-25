@@ -2,15 +2,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 # local imports
+from app.dependencies.auth import get_current_user, require_admin
 from app.dependencies.db import get_db
 from app.models.users import User, RoleEnum
 from app.models.delivery import Delivery
+from app.serializers.delivery import delivery_to_dict
 
 router = APIRouter(prefix="/drivers", tags=["Drivers"])
 
 @router.get("/", status_code=status.HTTP_200_OK)
-def get_drivers(db: Session = Depends(get_db)):
-    drivers = db.query(User).filter(User.role == RoleEnum.DRIVER.value).all()
+def get_drivers(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+):
+    drivers = db.query(User).filter(User.role == RoleEnum.DELIVER).all()
     return {"message": "List of drivers", "data": drivers}
 
 @router.get("/{driver_id}", status_code=status.HTTP_200_OK)
@@ -26,4 +31,7 @@ def get_driver_deliveries(driver_id: UUID, db: Session = Depends(get_db)):
     if not driver:
         raise HTTPException(status_code=404, detail=f"Driver with ID {driver_id} not found")
     deliveries = db.query(Delivery).filter(Delivery.assigned_to == driver_id).all()
-    return {"message": f"Deliveries assigned to driver {driver_id}", "data": deliveries}
+    return {
+        "message": f"Deliveries assigned to driver {driver_id}",
+        "data": [delivery_to_dict(d) for d in deliveries],
+    }
